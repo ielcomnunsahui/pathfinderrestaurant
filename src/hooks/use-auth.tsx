@@ -30,7 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let requestId = 0;
+
     const applySession = async (s: Session | null) => {
+      const currentRequest = ++requestId;
       if (!mounted) return;
       setLoading(true);
       setSession(s);
@@ -38,21 +41,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.user) {
         try {
           const nextRoles = await loadRoles(s.user.id);
-          if (mounted) setRoles(nextRoles);
+          if (mounted && currentRequest === requestId) setRoles(nextRoles);
         } catch {
-          if (mounted) setRoles([]);
+          if (mounted && currentRequest === requestId) setRoles([]);
         }
       } else {
         setRoles([]);
       }
-      if (mounted) setLoading(false);
+      if (mounted && currentRequest === requestId) setLoading(false);
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      void applySession(s);
+      setSession(s);
+      setUser(s?.user ?? null);
+      window.setTimeout(() => {
+        void applySession(s);
+      }, 0);
     });
     supabase.auth.getSession().then(({ data }) => {
       void applySession(data.session);
+    }).catch(() => {
+      if (mounted) setLoading(false);
     });
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);
