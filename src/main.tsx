@@ -28,9 +28,11 @@ ReactDOM.createRoot(rootEl).render(
   </React.StrictMode>
 );
 
-// Register a basic service worker if present (PWA).
+// Clean up any stale service worker from previous deployments.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => { /* no-op */ });
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => registrations.forEach((registration) => void registration.unregister()))
+      .catch(() => { /* no-op */ });
   });
 }
