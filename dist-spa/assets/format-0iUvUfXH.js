@@ -1,0 +1,1 @@
+function n(t){return`₦${Number(t??0).toLocaleString("en-NG",{minimumFractionDigits:0,maximumFractionDigits:2})}`}function a(t){return new Date(t).toLocaleDateString("en-NG",{year:"numeric",month:"short",day:"numeric"})}function r(t){return new Date(t).toLocaleString("en-NG",{dateStyle:"medium",timeStyle:"short"})}export{r as a,a as b,n as f};
