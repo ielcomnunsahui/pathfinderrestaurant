@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Lock, Mail, ShieldCheck, UserCog, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { PrismLogo } from "@/components/brand/PrismLogo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 
 type Variant = "staff" | "admin" | "manager";
 
@@ -20,21 +19,11 @@ const META: Record<Variant, { title: string; subtitle: string; icon: React.Eleme
 
 export function SignInPage({ variant }: { variant: Variant }) {
   const navigate = useNavigate();
-  const { user, roles, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const m = META[variant];
   const Icon = m.icon;
-
-  useEffect(() => {
-    if (loading || !user) return;
-    if (roles.includes("staff") && !roles.includes("admin") && !roles.includes("manager")) {
-      navigate({ to: "/dashboard/sales", replace: true });
-      return;
-    }
-    navigate({ to: "/dashboard", replace: true });
-  }, [loading, user, roles, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

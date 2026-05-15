@@ -27,12 +27,3 @@ ReactDOM.createRoot(rootEl).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
-
-// Clean up any stale service worker from previous deployments.
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.getRegistrations()
-      .then((registrations) => registrations.forEach((registration) => void registration.unregister()))
-      .catch(() => { /* no-op */ });
-  });
-}

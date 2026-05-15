@@ -7,7 +7,9 @@ self.addEventListener("activate", (event) => {
     self.registration
       .unregister()
       .then(() => self.clients.matchAll({ type: "window", includeUncontrolled: true }))
-      .then((clients) => clients.forEach((client) => client.navigate(client.url)))
+      .then((clients) => {
+        for (const client of clients) client.navigate(client.url);
+      })
       .catch(() => undefined),
   );
 });

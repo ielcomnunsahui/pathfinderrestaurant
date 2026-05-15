@@ -52,16 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      window.setTimeout(() => {
-        void applySession(s);
-      }, 0);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      void applySession(data.session);
-    }).catch(() => {
-      if (mounted) setLoading(false);
+      void applySession(s);
     });
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);

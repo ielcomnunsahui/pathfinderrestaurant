@@ -1,29 +1,33 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
-// Standalone SPA build for Vercel static hosting.
-// Stubs out TanStack Start server-only modules so the bundle is purely client-side.
+const spaStub = (file: string) => path.resolve(__dirname, "src/spa-stubs", file);
+
 export default defineConfig({
+  appType: "spa",
+  base: "/",
+  publicDir: "public",
   plugins: [
-    tanstackRouter({ target: "react", autoCodeSplitting: true }),
+    tanstackRouter({ target: "react", autoCodeSplitting: false }),
     react(),
     tailwindcss(),
     tsconfigPaths(),
   ],
   resolve: {
     alias: [
-      { find: /^@tanstack\/react-start\/server$/, replacement: path.resolve(__dirname, "src/spa-stubs/tanstack-start-server.ts") },
-      { find: /^@tanstack\/react-start$/, replacement: path.resolve(__dirname, "src/spa-stubs/tanstack-start.ts") },
-      { find: path.resolve(__dirname, "src/integrations/supabase/client.server.ts"), replacement: path.resolve(__dirname, "src/spa-stubs/client-server.ts") },
-      { find: path.resolve(__dirname, "src/integrations/supabase/auth-middleware.ts"), replacement: path.resolve(__dirname, "src/spa-stubs/auth-middleware.ts") },
+      { find: /^@tanstack\/react-start\/server$/, replacement: spaStub("tanstack-start-server.ts") },
+      { find: /^@tanstack\/react-start$/, replacement: spaStub("tanstack-start.ts") },
+      { find: path.resolve(__dirname, "src/integrations/supabase/client.server.ts"), replacement: spaStub("client-server.ts") },
+      { find: path.resolve(__dirname, "src/integrations/supabase/auth-middleware.ts"), replacement: spaStub("auth-middleware.ts") },
     ],
   },
   build: {
     outDir: "dist-spa",
     emptyOutDir: true,
+    sourcemap: false,
   },
 });
