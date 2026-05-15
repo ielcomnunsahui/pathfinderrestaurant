@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { getRouter } from "./router";
 import "./styles.css";
 
@@ -14,16 +13,15 @@ try {
 } catch { /* ignore */ }
 
 const router = getRouter();
-const queryClient =
-  (router.options.context as { queryClient?: QueryClient } | undefined)?.queryClient ?? new QueryClient();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element #root not found in index.html");
 
+// NOTE: QueryClientProvider is already rendered inside __root.tsx's RootComponent.
+// Do NOT wrap RouterProvider in another QueryClientProvider here — duplicate
+// providers cause cascading re-renders that freeze controlled inputs in production.
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
