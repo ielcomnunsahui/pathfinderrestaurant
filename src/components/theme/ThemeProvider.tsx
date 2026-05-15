@@ -14,7 +14,7 @@ function getInitialTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Use lazy initializer to avoid an extra re-render on mount.
+  // Use lazy initializer to avoid an extra re-render on mount
   // Previously this was useState("dark") + useEffect(setThemeState(getInitialTheme())),
   // which caused a guaranteed re-render of the entire tree on every page load.
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
