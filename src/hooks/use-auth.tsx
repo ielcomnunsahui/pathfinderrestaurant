@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Refs to track current user ID and initial load — prevents cascading
-  // re-renders on token-refresh events that don't change the user.
+  // re-renders on token-refresh events that don't change the user
   const userIdRef = useRef<string | null>(null);
   const initialLoadDone = useRef(false);
 
