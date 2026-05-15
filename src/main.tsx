@@ -4,7 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { getRouter } from "./router";
 import "./styles.css";
 
-// Apply persisted theme before paint to avoid a light-mode flash.
+// ApplyA persisted theme before paint to avoid a light-mode flash.
 try {
   const stored = localStorage.getItem("prism-theme");
   const theme = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
