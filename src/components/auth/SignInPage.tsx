@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { ArrowLeft, Lock, Mail, ShieldCheck, UserCog, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -80,12 +79,7 @@ export function SignInPage({ variant }: { variant: Variant }) {
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mt-12 glass rounded-3xl p-8 shadow-elegant"
-        >
+        <div className="auth-panel-enter mt-12 glass rounded-3xl p-8 shadow-elegant">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Icon className="h-5 w-5" />
@@ -102,14 +96,14 @@ export function SignInPage({ variant }: { variant: Variant }) {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@pathfinder.ng" className="h-11 pl-10" required />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@pathfinder.ng" className="h-11 pl-10" autoComplete="email" required />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-11 pl-10" required minLength={8} />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-11 pl-10" autoComplete="current-password" required minLength={8} />
               </div>
             </div>
             <Button type="submit" variant="hero" size="xl" className="w-full" disabled={busy}>
@@ -129,7 +123,7 @@ export function SignInPage({ variant }: { variant: Variant }) {
             </div>
             <p className="pt-2 text-[11px]">Accounts are created by your administrator.</p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
