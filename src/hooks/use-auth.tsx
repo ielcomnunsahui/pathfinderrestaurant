@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
@@ -28,6 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Refs to track current user ID and initial load — prevents cascading
+  // re-renders on token-refresh events that don't change the user.
+  const userIdRef = useRef<string | null>(null);
+  const initialLoadDone = useRef(false);
+
   useEffect(() => {
     let mounted = true;
     let requestId = 0;
@@ -35,9 +40,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const applySession = async (s: Session | null) => {
       const currentRequest = ++requestId;
       if (!mounted) return;
+
+      const newUserId = s?.user?.id ?? null;
+      const prevUserId = userIdRef.current;
+
+      // If the user hasn't changed and we've already loaded once, this is just
+      // a token refresh — update session reference silently without triggering
+      // a loading state that would re-render the entire tree and freeze inputs.
+      if (initialLoadDone.current && newUserId === prevUserId && newUserId !== null) {
+        setSession(s);
+        return;
+      }
+
       setLoading(true);
       setSession(s);
       setUser(s?.user ?? null);
+      userIdRef.current = newUserId;
+
       if (s?.user) {
         try {
           const nextRoles = await loadRoles(s.user.id);
@@ -48,7 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setRoles([]);
       }
-      if (mounted && currentRequest === requestId) setLoading(false);
+      if (mounted && currentRequest === requestId) {
+        setLoading(false);
+        initialLoadDone.current = true;
+      }
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -63,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     loading,
     signOut: async () => {
+      // Reset refs so next sign-in triggers full load
+      userIdRef.current = null;
+      initialLoadDone.current = false;
       await supabase.auth.signOut();
     },
     hasRole: (r) => roles.includes(r),
