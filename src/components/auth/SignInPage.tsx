@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { PrismLogo } from "@/components/brand/PrismLogo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 
 type Variant = "staff" | "admin" | "manager";
 

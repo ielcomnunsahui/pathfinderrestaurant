@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ function ForgotPassword() {
           </Link>
           <div className="flex items-center gap-2"><ThemeToggle /><PrismLogo showText={false} /></div>
         </div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 glass rounded-3xl p-8 shadow-elegant">
+        <div className="auth-panel-enter mt-12 glass rounded-3xl p-8 shadow-elegant">
           <p className="text-xs uppercase tracking-[0.3em] text-primary">Reset password</p>
           <h1 className="mt-3 font-display text-3xl font-bold tracking-tight">Forgot your password?</h1>
           <p className="mt-2 text-sm text-muted-foreground">Enter your email and we'll send a reset link.</p>
@@ -64,7 +63,7 @@ function ForgotPassword() {
               </Button>
             </form>
           )}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
