@@ -1,10 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider } from "@tanstack/react-router";
-import { getRouter } from "./router";
+import App from "./App";
 import "./styles.css";
 
-// ApplyA persisted theme before paint to avoid a light-mode flash.
+// Apply persisted theme before paint
 try {
   const stored = localStorage.getItem("prism-theme");
   const theme = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -12,16 +11,11 @@ try {
   document.documentElement.style.colorScheme = theme;
 } catch { /* ignore */ }
 
-const router = getRouter();
-
 const rootEl = document.getElementById("root");
-if (!rootEl) throw new Error("Root element #root not found in index.html");
+if (!rootEl) throw new Error("Root element #root not found");
 
-// NOTE: QueryClientProvider is already rendered inside __root.tsx's RootComponent.
-// Do NOT wrap RouterProvider in another QueryClientProvider here — duplicate
-// providers cause cascading re-renders that freeze controlled inputs in production.
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <App />
   </React.StrictMode>
 );

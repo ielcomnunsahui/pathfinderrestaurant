@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, ShoppingCart, Package, Receipt, BarChart3, Users, LogOut, Settings, Wallet, Target, History, UserCog, Truck } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const path = useRouterState({ select: (r) => r.location.pathname });
+  const path = useLocation().pathname;
   const { signOut, user, roles, loading, hasRole } = useAuth();
 
   const isAdmin = hasRole("admin");
