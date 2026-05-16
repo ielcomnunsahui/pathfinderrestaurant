@@ -1,81 +1,124 @@
-# P.R.I.S.M — Production Feature Expansion
+## Goal
 
-This is a large scope. I'll deliver it in **6 sequenced phases**, each shippable on its own. After you approve I'll start at Phase 1 and work through them. If you want a different order or want to drop anything, tell me before approving.
+Convert the project from **TanStack Start (SSR + file-based routing + server functions)** to a **plain Vite + React SPA with React Router v6**, deployable to both Vercel and Lovable hosting.
 
----
+## Why
 
-## Phase 1 — Database & Audit Log (foundation)
+The Vercel production build keeps freezing on the login page. TanStack Start's SSR/server-fn/Cloudflare-Worker pipeline is the root of repeated production-only bugs. A plain Vite SPA eliminates SSR, the routeTree codegen, the server-fn RPC layer, and the Worker runtime — leaving a single client bundle that behaves identically in preview and on Vercel.
 
-New tables + triggers via migration:
+## New stack
 
-- `audit_logs` — `id, user_id, user_email, table_name, record_id, action (INSERT/UPDATE/DELETE), old_data jsonb, new_data jsonb, created_at`. RLS: admins read all; managers read all; staff read own.
-- Postgres trigger function `log_audit()` attached to `inventory_items`, `sales`, `sale_items`, `expenses`, `stock_movements` for INSERT/UPDATE/DELETE.
-- `staff_salaries` — `id, user_id, month (date), base_salary, bonus, deductions, status (paid/unpaid), paid_at, paid_by, notes`. RLS: admin write, all auth read.
-- `business_goals` — `id, period (4m/6m/annual), start_date, end_date, target_revenue, notes, created_by`. RLS: admin write, auth read.
-- Add `is_active boolean default true` to `profiles` for deactivation.
-- Trigger on `sales` insert that decrements `inventory_items.current_stock` and writes a `stock_movements` row (replaces current client-side decrement → race-safe).
-- New `purchase_orders` table (lightweight: `id, item_id, quantity, unit_cost, supplier_id, received_at, user_id`) with trigger that increments stock + logs movement.
+- **Build**: Vite 7 + `@vitejs/plugin-react`
+- **Routing**: `react-router-dom` v6 (`BrowserRouter`, `Routes`, `Route`, `Navigate`, `useNavigate`, `useParams`)
+- **Data**: `@tanstack/react-query` (kept)
+- **Auth + DB**: `@supabase/supabase-js` directly from the client (kept)
+- **Admin ops**: existing `admin-users` Supabase Edge Function (kept and reused)
+- **Styling**: Tailwind v4 + shadcn (kept untouched)
 
-## Phase 2 — Auth: Forgot/Reset Password + Admin User Management
+## File changes
 
-- `/forgot-password` — email entry, calls `supabase.auth.resetPasswordForEmail` with redirect to `/reset-password`.
-- `/reset-password` — public route, detects recovery hash, calls `updateUser({ password })`.
-- `/dashboard/users` (admin only) — list profiles + roles, invite (signup link / admin-create via edge function using service role), change role, toggle `is_active`, view audit trail per user.
-- Branded auth email templates via Lovable's auth email scaffolder.
+### Remove
+- `src/routes/` (entire folder — all `createFileRoute` files)
+- `src/routeTree.gen.ts`
+- `src/router.tsx`, `src/server.ts`, `src/start.ts`
+- `src/spa-stubs/` (no longer needed)
+- `src/integrations/supabase/auth-middleware.ts`, `auth-attacher.ts`, `client.server.ts`
+- `src/lib/admin-users.functions.ts` (replaced by direct edge-function fetch)
+- `vite.spa.config.ts`, `wrangler.jsonc`
+- `dist-spa/` (stale build output)
+- `public/sw.js` (no longer needed)
 
-## Phase 3 — Inventory + Sales Integration
+### Create
+- `src/App.tsx` — `BrowserRouter` + `<Routes>` table mapping every old route file to a page component
+- `src/pages/*.tsx` — one file per former route (Index, SignIn, AdminLogin, ManagerLogin, ForgotPassword, ResetPassword, AccessDenied, Dashboard layout, Dashboard.* children, NotFound)
+- `src/lib/admin-users.ts` — thin `fetch()` wrapper around the `admin-users` edge function (uses the user's Supabase session token)
 
-- `/dashboard/inventory` — confirm manager+admin full CRUD (already wired); add **delete**, **bulk restock** dialog (creates `purchase_orders` row → trigger updates stock).
-- `/dashboard/sales` — allow editing line-item unit price at point of sale (manager+admin); rely on DB trigger for stock decrement; show low-stock warning when item near reorder.
-- Stock movement history view per item (drawer).
+### Rewrite
+- `src/main.tsx` — mount `<App />` with `BrowserRouter`, `QueryClientProvider`, `ThemeProvider`, `AuthProvider`, `Toaster`, `ErrorBoundary`
+- `index.html` — add SEO meta tags, fonts, manifest (moved out of `__root.tsx`'s `head()`)
+- `vite.config.ts` — drop `@lovable.dev/vite-tanstack-config`, use plain `defineConfig` with `react()`, `tailwindcss()`, `@` alias, dev server port
+- `vercel.json` — minimal SPA rewrite of all paths to `/index.html`
+- `package.json` — remove `@tanstack/react-start`, `@tanstack/react-router`, `@tanstack/router-plugin`, `@cloudflare/vite-plugin`, `@lovable.dev/vite-tanstack-config`; add `react-router-dom`, `@vitejs/plugin-react`
+- `tsconfig.json` — drop TanStack Start references
+- `src/hooks/use-auth.tsx` — replace any `useNavigate` from `@tanstack/react-router` with `react-router-dom` equivalent; remove server-fn calls
+- `src/components/auth/RoleGuard.tsx` — same router import swap
+- All UI components currently importing `Link`/`useNavigate` from `@tanstack/react-router` → `react-router-dom`
 
-## Phase 4 — Salary, Goals & Analytics
+### Keep as-is
+- `src/components/ui/*` (shadcn)
+- `src/components/landing/*`, `src/components/dashboard/*`, `src/components/brand/*`, `src/components/theme/*`, `src/components/pwa/*`
+- `src/integrations/supabase/client.ts`, `types.ts`
+- `src/hooks/use-low-stock-alerts.tsx`, `use-mobile.tsx`
+- `src/lib/format.ts`, `pdf.ts`, `utils.ts`, `error-page.ts`, `error-capture.ts`
+- `src/styles.css`
+- `supabase/` (migrations + `admin-users` edge function)
 
-- `/dashboard/salaries` — table of staff × months, mark paid/unpaid, total payroll for selected month.
-- `/dashboard/goals` — create 4/6/12-month revenue goals, show progress bar vs actual sales, ETA.
-- `/dashboard/reports` enhancements:
-  - Most profitable item (sum(qty × (unit_price − cost_price)))
-  - Most sold item (sum(qty))
-  - Monthly income, expenses, salaries, **gross profit**, **net profit**, gain/loss trend (12-month bar+line combo).
-- `/dashboard/audit` — admin-only audit log viewer with filters (user, table, action, date range).
+## Routing map (React Router v6)
 
-## Phase 5 — PDF / Print Reports
+```text
+/                       → Index (landing)
+/login                  → SignIn (general)
+/login/admin            → AdminLogin
+/login/manager          → ManagerLogin
+/forgot-password        → ForgotPassword
+/reset-password         → ResetPassword
+/access-denied          → AccessDenied
+/dashboard              → Dashboard layout (Outlet, RoleGuard wraps)
+  /dashboard            → DashboardIndex
+  /dashboard/sales      → Sales
+  /dashboard/inventory  → Inventory
+  /dashboard/inventory-analytics
+  /dashboard/expenses
+  /dashboard/salaries
+  /dashboard/suppliers
+  /dashboard/reports
+  /dashboard/goals
+  /dashboard/audit
+  /dashboard/users
+  /dashboard/settings
+*                       → NotFound
+```
 
-- Use `jspdf` + `jspdf-autotable` (works in browser, no native deps).
-- "Print" + "Download PDF" buttons on Sales, Inventory, Expenses, Salary, P&L statement pages.
-- Print-friendly CSS via `@media print`.
+Dashboard parent uses `<Outlet />` and is wrapped in `<RoleGuard>` to enforce auth.
 
-## Phase 6 — PWA (last, lowest risk)
+## Server functions → Edge function
 
-⚠️ Note from platform guidance: PWA service workers can interfere with the Lovable preview iframe. I'll configure carefully:
+Only `getAdminUsers` / admin user management currently uses server functions. Replace with a client-side helper that calls the existing `supabase/functions/admin-users` edge function:
 
-- `vite-plugin-pwa` with `devOptions.enabled: false` (active only in published build).
-- Registration guarded against iframe + preview hosts.
-- `manifest.webmanifest` with PRISM icons, `display: standalone`.
-- `NetworkFirst` for HTML, `StaleWhileRevalidate` for assets.
-- Custom install prompt component using `beforeinstallprompt` event.
-- Offline page fallback.
-- Offline read of cached dashboard; mutations require online (toast on offline write attempt).
+```ts
+// src/lib/admin-users.ts
+export async function callAdminUsers(action, payload) {
+  const { data: { session } } = await supabase.auth.getSession()
+  return fetch(`${SUPABASE_URL}/functions/v1/admin-users`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session?.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload }),
+  }).then(r => r.json())
+}
+```
 
----
+The edge function already verifies the caller's JWT and admin role, so RLS-bypassing admin ops stay safely on the server.
 
-## Technical notes
+## Deployment
 
-- All triggers run as `SECURITY DEFINER` with locked `search_path`.
-- Audit log uses `auth.uid()` for actor; service-role webhook writes record `user_id = NULL` with system marker.
-- Admin user creation uses a TanStack Start `createServerFn` with `supabaseAdmin.auth.admin.createUser` (service-role) — never exposed client-side.
-- All new tables get RLS + indexes on (`user_id`, `created_at`) and foreign-key columns.
-- PDF generation runs client-side from already-loaded React Query data — no extra API surface.
+- **Vercel**: `vercel.json` with a single `{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }`. Build command `vite build`, output `dist`.
+- **Lovable**: works out of the box once the project type is a plain Vite app; `.lovable/project.json` updated to drop the `tanstack_start_ts_*` template marker (will note that template metadata is informational only).
 
----
+## Risks / acceptances
 
-## Deliverable order if approved
+- **One-shot migration**: ~30 route files rewritten as page components. I'll preserve all UI/business logic verbatim — only the route shell, navigation imports, and data-fetching style change.
+- **No SSR**: Initial HTML will no longer be pre-rendered. SEO meta tags move into `index.html` and per-page `document.title` updates via a small `useDocumentTitle` hook.
+- **Type-safe links lost**: `<Link to="/foo">` from `react-router-dom` is a plain string. Acceptable trade-off.
+- **Auto-generated `routeTree.gen.ts`** is deleted; no more codegen step.
 
-1. Migration (Phase 1) — I'll send the SQL for your approval.
-2. Auth pages + admin users (Phase 2).
-3. Inventory/sales sync + edits (Phase 3).
-4. Salary, goals, expanded analytics, audit viewer (Phase 4).
-5. PDF/print (Phase 5).
-6. PWA (Phase 6).
+## Execution order
 
-Reply **"go"** to start with Phase 1, or tell me to reorder/drop phases.
+1. Add `react-router-dom`, remove TanStack deps
+2. Rewrite `vite.config.ts`, `vercel.json`, `index.html`, `main.tsx`
+3. Move every `src/routes/*.tsx` → `src/pages/*.tsx`, swap router imports
+4. Build `src/App.tsx` route table + dashboard layout
+5. Replace `src/lib/admin-users.functions.ts` usage with edge-function client
+6. Delete old TanStack files and stubs
+7. Verify build passes; smoke-test login + dashboard nav in preview
+
+After approval I'll execute all of this in one go.
