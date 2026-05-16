@@ -97,6 +97,6 @@ function SuppliersPage() {
   );
 }
 
-export default function SuppliersPage() {
-  return () => <RoleGuard allow={["admin","manager"]}><SuppliersPage /></RoleGuard>;
+export default function SuppliersRoute() {
+  return <RoleGuard allow={["admin","manager"]}><SuppliersPage /></RoleGuard>;
 }

@@ -167,6 +167,6 @@ function InventoryAnalyticsPage() {
   );
 }
 
-export default function InventoryAnalyticsPage() {
-  return () => <RoleGuard allow={["admin","manager"]}><InventoryAnalyticsPage /></RoleGuard>;
+export default function InventoryAnalyticsRoute() {
+  return <RoleGuard allow={["admin","manager"]}><InventoryAnalyticsPage /></RoleGuard>;
 }

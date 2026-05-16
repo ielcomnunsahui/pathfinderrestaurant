@@ -246,6 +246,6 @@ function SalariesPage() {
   );
 }
 
-export default function SalariesPage() {
-  return () => <RoleGuard allow={["admin"]}><SalariesPage /></RoleGuard>;
+export default function SalariesRoute() {
+  return <RoleGuard allow={["admin"]}><SalariesPage /></RoleGuard>;
 }

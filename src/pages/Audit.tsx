@@ -91,6 +91,6 @@ function AuditPage() {
   );
 }
 
-export default function AuditPage() {
-  return () => <RoleGuard allow={["admin","manager"]}><AuditPage /></RoleGuard>;
+export default function AuditRoute() {
+  return <RoleGuard allow={["admin","manager"]}><AuditPage /></RoleGuard>;
 }

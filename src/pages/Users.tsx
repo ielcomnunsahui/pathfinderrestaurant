@@ -151,6 +151,6 @@ function UsersPage() {
   );
 }
 
-export default function UsersPage() {
-  return () => <RoleGuard allow={["admin"]}><UsersPage /></RoleGuard>;
+export default function UsersRoute() {
+  return <RoleGuard allow={["admin"]}><UsersPage /></RoleGuard>;
 }

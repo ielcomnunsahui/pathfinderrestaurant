@@ -150,6 +150,6 @@ function ReportsPage() {
   );
 }
 
-export default function ReportsPage() {
-  return () => <RoleGuard allow={["admin","manager"]}><ReportsPage /></RoleGuard>;
+export default function ReportsRoute() {
+  return <RoleGuard allow={["admin","manager"]}><ReportsPage /></RoleGuard>;
 }

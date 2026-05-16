@@ -148,6 +148,6 @@ function GoalsPage() {
   );
 }
 
-export default function GoalsPage() {
-  return () => <RoleGuard allow={["admin","manager"]}><GoalsPage /></RoleGuard>;
+export default function GoalsRoute() {
+  return <RoleGuard allow={["admin","manager"]}><GoalsPage /></RoleGuard>;
 }
