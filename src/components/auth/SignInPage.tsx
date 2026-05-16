@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, Mail, ShieldCheck, UserCog, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -51,7 +51,7 @@ export function SignInPage({ variant }: { variant: Variant }) {
     setBusy(false);
     toast.success("Welcome back");
     const staffOnly = signedInRoles.includes("staff") && !signedInRoles.includes("admin") && !signedInRoles.includes("manager");
-    navigate({ to: staffOnly ? "/dashboard/sales" : "/dashboard", replace: true });
+    navigate(staffOnly ? "/dashboard/sales" : "/dashboard", { replace: true });
   };
 
   return (

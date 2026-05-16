@@ -1,4 +1,4 @@
-import { Navigate } from "@tanstack/react-router";
+import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,7 +14,7 @@ export function RoleGuard({ allow, children }: { allow: Role[]; children: ReactN
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" replace />;
   const ok = roles.some((r) => allow.includes(r));
   if (!ok) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;

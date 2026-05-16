@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Link } from "@tanstack/react-router";
+
 
 /**
  * Realtime low-stock alerts for managers/admins.
@@ -57,5 +57,3 @@ export function LowStockBoundary() {
   return null;
 }
 
-// Avoid unused import warning
-void Link;
